@@ -11,12 +11,14 @@ $match = intval(isset($_GET['match']) ? $_GET['match'] : 0);
 	<title>Document</title>
 </head>
 <body>
+<p id="players"></p>
 <h3><?= $_SESSION["player"]; ?></h3>
 <script src="js/jquery.min.js"></script>
 <script>
 	var answer = false;
 	var interval = setInterval(function () {
 				$.get("api.php?id=<?=$match;?>", function (data) {
+					$("#players").text(data.players.join(" VS "));
 					if (data.message.length > 1){
 						alert(data.message);
 					}

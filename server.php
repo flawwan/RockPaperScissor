@@ -12,8 +12,9 @@ if (isset($_POST['token']) && $_POST['token'] === GAME_KEY) {
 	//Lägg sedan till alla spelar i players vektorn med den matchens id som returnerades ovan.
 	$players = isset($_POST['keys']) ? json_decode($_POST['keys']) : array();
 	foreach ($players as $player) {
-		$sth = $db->prepare("INSERT INTO `players`(`player`,`match_id`) VALUES(:player,:matchID)");
-		$sth->bindParam(':player', $player);
+		$sth = $db->prepare("INSERT INTO `players`(`player`,`match_id`,`name`) VALUES(:player,:matchID, :name)");
+		$sth->bindParam(':player', $player[0]);
+		$sth->bindParam(':name', $player[1]);
 		$sth->bindParam(':matchID', $matchID);
 		$sth->execute();
 	}
