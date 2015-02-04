@@ -42,31 +42,31 @@ class Pick
 				case "rock":
 					if ($players[1]["pick"] == "paper") {
 						//Player 2 won
-						$this->winner($players[1]["player"]);
+						$this->winner($players[1], $players[0], $players[1]);
 					} elseif ($players[1]["pick"] == "rock") {
 						$this->msg = "Tie";
 					} else {
-						$this->winner($players[0]["player"]);
+						$this->winner($players[0], $players[0], $players[1]);
 					}
 					break;
 				case "paper":
 					if ($players[1]["pick"] == "scissor") {
 						//Player 2 won
-						$this->winner($players[1]["player"]);
+						$this->winner($players[1], $players[0], $players[1]);
 					} elseif ($players[1]["pick"] == "paper") {
 						$this->msg = "Tie";
 					} else {
-						$this->winner($players[0]["player"]);
+						$this->winner($players[0], $players[0], $players[1]);
 					}
 					break;
 				case "scissor":
 					if ($players[1]["pick"] == "rock") {
 						//Player 2 won
-						$this->winner($players[1]["player"]);
+						$this->winner($players[1], $players[0], $players[1]);
 					} elseif ($players[1]["pick"] == "scissor") {
 						$this->msg = "Tie";
 					} else {
-						$this->winner($players[0]["player"]);
+						$this->winner($players[0], $players[0], $players[1]);
 					}
 					break;
 			}
@@ -89,12 +89,14 @@ class Pick
 		return $this->msg;
 	}
 
-	function winner($winner)
+	function winner($player, $player1, $player2)
 	{
-		if ($_SESSION['player'] === $winner) {
-			$this->msg = "You won";
+		$enemyPick = $_SESSION['player'] == $player1["player"] ? $player2["pick"] : $player1["pick"];
+		$yourPick = $_SESSION['player'] == $player1["player"] ? $player1["pick"] : $player2["pick"];
+		if ($_SESSION['player'] === $player["player"]) {
+			$this->msg = "You won(" . $yourPick . "), enemy picked: " . $enemyPick;
 		} else {
-			$this->msg = "You lost";
+			$this->msg = "You lost(" . $yourPick . "), enemy picked: " . $enemyPick;
 		}
 	}
 }
