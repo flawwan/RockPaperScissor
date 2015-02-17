@@ -22,7 +22,8 @@ $match = intval(isset($_GET['match']) ? $_GET['match'] : 0);
 					alert(data.message);
 				}
 
-				if (data.data.pick == "null") {
+				//if (data.data.pick == "null") {
+				if (data.data.turn == "1") {
 					//Pick something
 					var pick = prompt("Rock/Paper/Scissor");
 					switch (pick) {

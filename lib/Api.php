@@ -27,12 +27,28 @@ class Api
 
 		$sth = $this->db->prepare("UPDATE `players` SET `pick`=:pick WHERE `player`=:user AND `match_id`=:match");
 		$sth->execute(array(':pick' => $this->pick, ':user' => $this->currentPlayer, ':match' => $this->match));
+		////////////////////////////////////////TURNED BASE GAMING/////////////////////////
+		//Fetch enemy player
+		$sth = $this->db->prepare("SELECT `id` FROM `players` WHERE `player`!=:user AND `match_id`=:match");
+		$sth->execute(array(':user' => $this->currentPlayer, ':match' => $this->match));
+
+		$turn = $sth->fetch()["id"];
+		// set other turn
+		$sth = $this->db->prepare("UPDATE `matches` SET `turn`=:turn WHERE `match_id`=:match_id");
+		$sth->execute(array(':turn' => $turn, ':match_id' => $this->match));
+
 	}
 
 	function ajax()
 	{
 
-		$sth = $this->db->prepare("SELECT `pick` FROM `players` WHERE `player`=:user AND `match_id`=:match");
+		$sth = $this->db->prepare("
+		SELECT
+		`pick`,
+		(`turn` = `players`.`id`) as `turn`
+		FROM `players`
+		LEFT JOIN `matches` ON `matches`.`match_id`=`players`.`match_id`
+		WHERE `player`=:user AND `matches`.`match_id`=:match");
 		$sth->execute(array(':user' => $this->currentPlayer, ':match' => $this->match));
 		$currentPlayerData = $sth->fetch(PDO::FETCH_ASSOC);
 
@@ -63,7 +79,7 @@ class Api
 		}
 
 		header('Content-Type: application/json');
-		$returnData =  json_encode(array(
+		$returnData = json_encode(array(
 			'data' => $currentPlayerData,
 			'message' => $this->msg,
 			'players' => $this->players
