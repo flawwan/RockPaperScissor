@@ -1,8 +1,6 @@
 <?php
 session_start();
 $match = intval(isset($_GET['match']) ? $_GET['match'] : 0);
-
-
 ?>
 <!doctype html>
 <html lang="en">
@@ -37,7 +35,7 @@ $match = intval(isset($_GET['match']) ? $_GET['match'] : 0);
 								break;
 							case "scissor":
 								console.log("scissor");
-								answer = true;
+	 								answer = true;
 								break;
 							default:
 								alert("Wrong answer");

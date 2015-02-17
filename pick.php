@@ -1,10 +1,10 @@
 <?php
+session_start();
 require 'lib/Database.php';
 require 'lib/Pick.php';
-session_start();
 header('Content-Type: application/json');
 
-$match = intval(isset($_GET['id']) ? $_GET['id'] : 0);
+$match = isset($_GET['id']) ? intval($_GET['id']) : 0;
 $player = $_SESSION["player"];
 $pick = $_GET['pick'];
 
