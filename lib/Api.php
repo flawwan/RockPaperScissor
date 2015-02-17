@@ -23,7 +23,7 @@ class Api
 
 	function pick()
 	{
-		$this->pick = intval(isset($_GET['pick']) ? $_GET['pick'] : 0);
+		$this->pick = isset($_GET['pick']) ? $_GET['pick'] : 0;
 
 		$sth = $this->db->prepare("UPDATE `players` SET `pick`=:pick WHERE `player`=:user AND `match_id`=:match");
 		$sth->execute(array(':pick' => $this->pick, ':user' => $this->currentPlayer, ':match' => $this->match));
@@ -31,6 +31,11 @@ class Api
 
 	function ajax()
 	{
+
+		$sth = $this->db->prepare("SELECT `pick` FROM `players` WHERE `player`=:user AND `match_id`=:match");
+		$sth->execute(array(':user' => $this->currentPlayer, ':match' => $this->match));
+		$currentPlayerData = $sth->fetch(PDO::FETCH_ASSOC);
+
 
 		//Get information about the match
 		$sth = $this->db->prepare("SELECT `pick`,`player`,`name`,`score` FROM `players` WHERE `match_id`=:match");
@@ -57,20 +62,16 @@ class Api
 			$this->getWinner($players[0], $players[1]);
 		}
 
-		if ($this->status()) {
-			$this->resetRound();
-		}
-
-		$sth = $this->db->prepare("SELECT `pick` FROM `players` WHERE `player`=:user AND `match_id`=:match");
-		$sth->execute(array(':user' => $this->currentPlayer, ':match' => $this->match));
-		$currentPlayerData = $sth->fetch(PDO::FETCH_ASSOC);
-
 		header('Content-Type: application/json');
-		return json_encode(array(
+		$returnData =  json_encode(array(
 			'data' => $currentPlayerData,
 			'message' => $this->msg,
 			'players' => $this->players
 		));
+		if ($this->status()) {
+			$this->resetRound();
+		}
+		return $returnData;
 	}
 
 	private function getWinner($player1, $player2)
@@ -153,10 +154,9 @@ class Api
 
 	private function winner($player, $player1, $player2)
 	{
-		$enemyPick = $_SESSION['player'] == $player1["player"] ? $player2["pick"] : $player1["pick"];
-		$yourPick = $_SESSION['player'] == $player1["player"] ? $player1["pick"] : $player2["pick"];
-		if ($_SESSION['player'] === $player["player"]) {
-
+		$enemyPick = $this->currentPlayer == $player1["player"] ? $player2["pick"] : $player1["pick"];
+		$yourPick = $this->currentPlayer == $player1["player"] ? $player1["pick"] : $player2["pick"];
+		if ($this->currentPlayer === $player["player"]) {
 			$this->msg = "You won(" . $yourPick . "), enemy picked: " . $enemyPick;
 			$this->addWin($_SESSION['player']);
 		} else {
