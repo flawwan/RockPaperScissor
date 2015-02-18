@@ -4,15 +4,16 @@ class Server
 {
 	private $db = null;
 
-	function __construct($db)
+	public function __construct($db)
 	{
 		$this->db = $db;
-
 	}
 
+    /**
+     * Skapar en session för spelare och skickar den vidare.
+     */
 	public function play()
 	{
-
 		$key = !is_array($_GET['key']) ? $_GET['key'] : null;
 		if (!isset($key)) {
 			die("Invalid data");
@@ -38,6 +39,10 @@ class Server
 		}
 	}
 
+    /**
+     * Kommunikationslänk med gamecentral för att kommunicera.
+     * @param $serverToken SHA512 server API token
+     */
 	public function authenticateServer($serverToken)
 	{
 		if (isset($_POST['token']) && $_POST['token'] === $serverToken && !is_array($serverToken)) {
@@ -57,6 +62,7 @@ class Server
 		}
 	}
 
+    //Lägg till spelare på spelet
 	private function createPlayers($players, $matchID)
 	{
 		$sth = $this->db->prepare("INSERT INTO `players`(`player`,`match_id`,`name`) VALUES(:player,:matchID, :name)");

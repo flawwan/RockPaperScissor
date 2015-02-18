@@ -1,3 +1,3 @@
 <?php
-
-$db = new PDO("mysql:host=127.0.0.1;dbname=questGame", "root", "super9server");
+require '../config/config.php';
+$db = new PDO("mysql:host=" . DB_HOST . ";dbname=" . DB_NAME, DB_USER, DB_PASS);
