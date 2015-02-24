@@ -11,6 +11,10 @@ class Api
 	private $pick;
 	private $currentPlayer;
 
+    /**
+     * lägger till match id:n och spelarens spelnyckel.
+     * @param $db PDO object
+     */
 	function __construct($db)
 	{
 		$this->db = $db;
@@ -21,23 +25,44 @@ class Api
 		$this->currentPlayer = $_SESSION["player"];
 	}
 
+    /**
+     * Denna metod kallas när spelaren har valt ett alternativ i spelet.
+     */
 	function pick()
 	{
-		$this->pick = isset($_GET['pick']) ? $_GET['pick'] : 0;
-
+		$this->pick = isset($_GET['pick']) ? $_GET['pick'] : null;
+        //Sätt ditt val
 		$sth = $this->db->prepare("UPDATE `players` SET `pick`=:pick WHERE `player`=:user AND `match_id`=:match");
 		$sth->execute(array(':pick' => $this->pick, ':user' => $this->currentPlayer, ':match' => $this->match));
+
+		//Fetch enemy player
+		$sth = $this->db->prepare("SELECT `id` FROM `players` WHERE `player`!=:user AND `match_id`=:match");
+		$sth->execute(array(':user' => $this->currentPlayer, ':match' => $this->match));
+
+		$turn = $sth->fetch()["id"];
+		// set other turn
+		$sth = $this->db->prepare("UPDATE `matches` SET `turn`=:turn WHERE `match_id`=:match_id");
+		$sth->execute(array(':turn' => $turn, ':match_id' => $this->match));
 	}
 
+    /**
+     * Metod som kollar om det är din tur samt vilken poäng du och din motståndare har.
+     */
 	function ajax()
 	{
-
-		$sth = $this->db->prepare("SELECT `pick` FROM `players` WHERE `player`=:user AND `match_id`=:match");
+        //Kollar om det är din tur
+		$sth = $this->db->prepare("
+		SELECT
+		`pick`,
+		(`turn` = `players`.`id`) as `turn`
+		FROM `players`
+		LEFT JOIN `matches` ON `matches`.`match_id`=`players`.`match_id`
+		WHERE `player`=:user AND `matches`.`match_id`=:match");
 		$sth->execute(array(':user' => $this->currentPlayer, ':match' => $this->match));
 		$currentPlayerData = $sth->fetch(PDO::FETCH_ASSOC);
 
 
-		//Get information about the match
+		//Kollar om vi har en vinnare.
 		$sth = $this->db->prepare("SELECT `pick`,`player`,`name`,`score` FROM `players` WHERE `match_id`=:match");
 		$sth->execute(array(':match' => $this->match));
 		$players = $sth->fetchAll();
@@ -62,18 +87,22 @@ class Api
 			$this->getWinner($players[0], $players[1]);
 		}
 
+        //Returnerar data till klienten.
+
 		header('Content-Type: application/json');
-		$returnData =  json_encode(array(
+		$returnData = json_encode(array(
 			'data' => $currentPlayerData,
 			'message' => $this->msg,
 			'players' => $this->players
 		));
-		if ($this->status()) {
+        //Om rundan är klar, rensa och börja på ny runda.
+		if ($this->status) {
 			$this->resetRound();
 		}
-		return $returnData;
+		echo $returnData;
 	}
 
+    //Algorithm för att bestämma vem som vunnit
 	private function getWinner($player1, $player2)
 	{
 		switch ($player1["pick"]) {
@@ -111,6 +140,9 @@ class Api
 	}
 
 
+    /**
+     * Börja om på en ny runda
+     */
 	private function resetRound()
 	{
 
@@ -133,16 +165,10 @@ class Api
 		}
 	}
 
-	private function status()
-	{
-		return $this->status;
-	}
-
-	private function msg()
-	{
-		return $this->msg;
-	}
-
+    /**
+     * Lägg till en poäng
+     * @param $player
+     */
 	private function addWin($player)
 	{
 		$sth = $this->db->prepare("UPDATE `players` SET `score`=`score`+1 WHERE `player`=:player AND `match_id`=:node");
@@ -152,6 +178,7 @@ class Api
 		));
 	}
 
+    //Räkna ut vem som vann utifrån valen.
 	private function winner($player, $player1, $player2)
 	{
 		$enemyPick = $this->currentPlayer == $player1["player"] ? $player2["pick"] : $player1["pick"];
