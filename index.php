@@ -36,6 +36,9 @@ $match = intval(isset($_GET['match']) ? $_GET['match'] : 0);
 							console.log("scissor");
 							answer = true;
 							break;
+						case null:
+							alert("Wrong answer");
+							break;
 						default:
 							alert("Wrong answer");
 							break;
